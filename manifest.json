@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Code Copier & Downloader",
+  "version": "1.4",
+  "description": "Adds copy and download buttons with reliable subdirectory support.",
+  "permissions": ["clipboardWrite", "downloads", "storage"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

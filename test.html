@@ -1,0 +1,174 @@
+<div class="min-h-0 flex-1 overflow-auto bg-background"><pre class="min-h-full p-4 font-mono text-foreground text-xs leading-relaxed"><code>'use client';
+
+import { useEffect, useState } from 'react';
+import { ContourEditorClient } from './ContourEditorClient';
+
+interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  directory_path: string;
+  venv_status: 'uninitialized' | 'building' | 'ready' | 'failed';
+  created_at: string;
+  updated_at: string;
+}
+
+interface WorkspaceToggleProps {
+  userRole: string;
+}
+
+export default function WorkspaceToggle({ userRole }: WorkspaceToggleProps) {
+  const [subscribedProjects, setSubscribedProjects] = useState&lt;Project[]&gt;([]);
+  const [selectedProject, setSelectedProject] = useState&lt;Project | null&gt;(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() =&gt; {
+    // Fetch user's subscribed projects (in this system, we fetch the projects list)
+    fetch('/api/admin/projects')
+      .then((res) =&gt; (res.ok ? res.json() : []))
+      .then((data) =&gt; {
+        setSubscribedProjects(data);
+        setLoading(false);
+      })
+      .catch((err) =&gt; {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      &lt;div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-background text-muted-foreground gap-4"&gt;
+        &lt;div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" /&gt;
+        &lt;div&gt;
+          &lt;h2 className="font-headline font-bold text-foreground uppercase text-sm"&gt;
+            Retrieving Subscribed Models
+          &lt;/h2&gt;
+          &lt;p className="text-[10px] mt-1"&gt;Loading model projects...&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  // If a project is selected, show the workspace/contour window for that specific ML model
+  if (selectedProject) {
+    return (
+      &lt;div className="flex-1 flex flex-col overflow-hidden bg-background"&gt;
+        {/* Navigation / Header for Selected Project */}
+        &lt;div className="bg-card border-b border-border px-6 py-2 flex items-center justify-between shadow-sm select-none shrink-0"&gt;
+          &lt;div className="flex items-center gap-3"&gt;
+            &lt;button
+              onClick={() =&gt; setSelectedProject(null)}
+              className="px-3 py-1.5 rounded-md text-xs font-semibold border border-border bg-background hover:bg-muted transition-colors cursor-pointer"
+            &gt;
+              ← Back to Models
+            &lt;/button&gt;
+            &lt;span className="text-xs font-bold text-foreground font-headline uppercase"&gt;
+              📂 Model: {selectedProject.name}
+            &lt;/span&gt;
+          &lt;/div&gt;
+
+          &lt;div className="flex items-center gap-2 text-[10px] text-muted-foreground"&gt;
+            &lt;span&gt;Active Role:&lt;/span&gt;
+            &lt;span className="font-extrabold uppercase border border-border bg-background px-1.5 py-0.5 rounded text-foreground"&gt;
+              {userRole}
+            &lt;/span&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div className="flex-1 flex flex-col overflow-hidden"&gt;
+          &lt;ContourEditorClient /&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  // Otherwise, show the list of subscribed ML models with thumbnail/cards
+  return (
+    &lt;div className="flex-1 overflow-y-auto p-6 md:p-8 bg-background"&gt;
+      &lt;div className="max-w-6xl mx-auto flex flex-col gap-6"&gt;
+        &lt;div&gt;
+          &lt;h1 className="font-headline text-2xl font-extrabold uppercase tracking-tight text-foreground"&gt;
+            Subscribed ML Models
+          &lt;/h1&gt;
+          &lt;p className="text-muted-foreground text-xs mt-1 leading-relaxed"&gt;
+            Select a machine learning model workspace to run inference, edit contour coordinates,
+            and manage annotations.
+          &lt;/p&gt;
+        &lt;/div&gt;
+
+        {subscribedProjects.length === 0 ? (
+          &lt;div className="border border-dashed border-border rounded-[var(--radius)] p-12 text-center flex flex-col items-center justify-center gap-3"&gt;
+            &lt;div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-xl"&gt;
+              🧠
+            &lt;/div&gt;
+            &lt;div&gt;
+              &lt;h2 className="font-headline font-bold text-foreground uppercase text-xs"&gt;
+                No Subscribed Models Available
+              &lt;/h2&gt;
+              &lt;p className="text-[10px] text-muted-foreground max-w-xs mt-1 leading-relaxed"&gt;
+                You are not currently subscribed to any machine learning models. Please ask an
+                administrator to set up a project workspace.
+              &lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        ) : (
+          &lt;div className="grid grid-cols-1 md:grid-cols-3 gap-6"&gt;
+            {subscribedProjects.map((project) =&gt; (
+              &lt;div
+                key={project.id}
+                onClick={() =&gt; setSelectedProject(project)}
+                className="bg-card border border-border rounded-[var(--radius)] overflow-hidden shadow-sm hover:shadow-md hover:border-primary/50 transition-all cursor-pointer flex flex-col group"
+              &gt;
+                {/* Thumbnail Header (Placeholder Visual Image representation) */}
+                &lt;div className="aspect-video bg-muted relative flex items-center justify-center overflow-hidden border-b border-border"&gt;
+                  &lt;div className="absolute inset-0 bg-[radial-gradient(var(--color-border)_1px,transparent_1px)] [background-size:16px_16px] opacity-40" /&gt;
+                  &lt;div className="relative border border-primary/20 w-3/4 h-3/5 bg-primary/5 rounded flex items-center justify-center transition-transform group-hover:scale-105"&gt;
+                    &lt;span className="text-[10px] text-primary font-mono font-bold uppercase tracking-wider"&gt;
+                      {project.name} Workspace
+                    &lt;/span&gt;
+                    &lt;span className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-primary" /&gt;
+                    &lt;span className="absolute -bottom-1 -right-1 w-2 h-2 rounded-full bg-primary" /&gt;
+                  &lt;/div&gt;
+                  &lt;div className="absolute top-2 right-2"&gt;
+                    &lt;span
+                      className={`text-[8px] px-1.5 py-0.5 rounded border uppercase tracking-wider font-extrabold ${
+                        project.venv_status === 'ready'
+                          ? 'border-emerald-500/20 text-emerald-600 bg-emerald-500/10'
+                          : project.venv_status === 'building'
+                            ? 'border-amber-500/20 text-amber-600 bg-amber-500/10'
+                            : project.venv_status === 'failed'
+                              ? 'border-destructive/20 text-destructive bg-destructive/10'
+                              : 'border-border text-muted-foreground bg-muted'
+                      }`}
+                    &gt;
+                      {project.venv_status}
+                    &lt;/span&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+
+                {/* Content Details */}
+                &lt;div className="p-4 flex flex-col gap-1.5"&gt;
+                  &lt;h3 className="font-bold text-sm text-foreground uppercase group-hover:text-primary transition-colors"&gt;
+                    {project.name}
+                  &lt;/h3&gt;
+                  &lt;p className="text-muted-foreground text-xs line-clamp-2 leading-relaxed"&gt;
+                    {project.description ||
+                      'No description provided for this machine learning model.'}
+                  &lt;/p&gt;
+                  &lt;div className="flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/50 pt-2.5 mt-1.5"&gt;
+                    &lt;span&gt;Created: {new Date(project.created_at).toLocaleDateString()}&lt;/span&gt;
+                    &lt;span className="font-semibold text-primary group-hover:underline"&gt;
+                      Open Workspace →
+                    &lt;/span&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+            ))}
+          &lt;/div&gt;
+        )}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre></div>
