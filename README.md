@@ -33,7 +33,7 @@ A lightweight Google Chrome extension (Manifest V3) designed to quickly copy and
 
 1. **Clone or Download this Repository**:
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/LoNE-W0LvES/bolt-code-downloader.git
    ```
    *(or download the code as a ZIP and extract it)*
 
